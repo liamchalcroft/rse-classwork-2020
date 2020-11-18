@@ -10,6 +10,24 @@ def time_range(start_time, end_time, number_of_intervals=1, gap_between_interval
                  for i in range(number_of_intervals)]
     return [(ta.strftime("%Y-%m-%d %H:%M:%S"), tb.strftime("%Y-%m-%d %H:%M:%S")) for ta, tb in sec_range]
 
+def iss_passes(lat, lon, n=5):
+    """
+    Returns a time_range-like output for intervals of time when the International Space Station
+    passes at a given location and for a number of days from today.
+    """
+    iss_request = requests.get("http://api.open-notify.org/iss-pass.json",
+                               params={
+                                   "lat": lat,
+                                   "lon": lon,
+                                   "n": n})
+
+    if iss_request.status_code != 200:
+        # if the request failed for some reason
+        return []
+    response = iss_request.json()['response']
+    return [(datetime.datetime.fromtimestamp(x['risetime']).strftime("%Y-%m-%d %H:%M:%S"),
+             (datetime.datetime.fromtimestamp(x['risetime'] + x['duration'])).strftime("%Y-%m-%d %H:%M:%S"))
+            for x in response]
 
 def compute_overlap_time(range1, range2):
     overlap_time = []
